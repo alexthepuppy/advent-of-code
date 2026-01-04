@@ -15,7 +15,15 @@ impl DialRotation {
     }
 
     pub fn rotate(&mut self, value: i16) {
-        let nv = (((self.rotation as i16) + value) % 100) as u16;
+        let nv = {
+            let tv1 = ((self.rotation as i16) + value) % 100;
+            if tv1 < 0 {
+                (100 - tv1) as u16
+            } else {
+                tv1 as u16
+            }
+        };
+
         if nv == 0 {
             self.zero_crossings += 1;
         }
