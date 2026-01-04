@@ -4,34 +4,41 @@ fn get_lines() -> Vec<&'static str> {
     INPUT_FILE.lines().collect()
 }
 
+// A Struct to represent the dial and its rotation, and encapuslate its logic
 struct DialRotation {
-    rotation: u16,
-    zero_crossings: u16
+    rotation: u16,              // The position of the dial; should be constrained to 0-99 inclusivly.
+    pub zero_crossings: u16     // The number of times the dial LANDS ON ZERO at the end of the spinning operation.
 }
 
 impl DialRotation {
+    // Basic ahh constructor because habit
     pub fn new(rotation: u16, zero_crossings: u16) -> Self {
         Self { rotation, zero_crossings }
     }
 
+    // The actual rotation logic
     pub fn rotate(&mut self, value: i16) {
+        println!("[[RT]]");
         let nv = {
-            let tv1 = ((self.rotation as i16) + value) % 100;
+            let tv1 = ((self.rotation as i16) + value) % 100; // Convert the current value (uint 0-99) to signed so we can do math with `value` (-99 to 99)
             if tv1 < 0 {
-                (100 - tv1) as u16
+                // (THE FIX?): I had forgotten to abs the value before rotating
+                // If below zero, subtract 100 to wrap it around (values are constrained to two chars so we shouldn't need to worry about wrapping around twice)
+                (100 - tv1.abs()) as u16
             } else {
+                // It's above zero so just return it
                 tv1 as u16
             }
         };
+        println!("[DBG::NV] {}", nv); // Print out the dial value for debugging
 
-        if nv == 0 {
+        if nv == 0 { // ONLY IF LANDING AT ZERO, increment the crossing count
             self.zero_crossings += 1;
         }
-        self.rotation = nv;
-    }
+        println!("[DBG::ZC] {}", self.zero_crossings);
 
-    pub fn crossing_count(&self) -> u16 {
-        self.zero_crossings
+        // Update our rotation
+        self.rotation = nv;
     }
 }
 
@@ -54,7 +61,7 @@ pub fn solve() -> u16 {
         dial.rotate(mdv);
     }
 
-    dial.crossing_count()
+    dial.zero_crossings
 }
 
 pub fn main() {
