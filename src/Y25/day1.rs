@@ -15,12 +15,11 @@ impl DialRotation {
     }
 
     pub fn rotate(&mut self, value: i16) {
-        let mut nv = ((self.rotation as i16) + value);
-        if nv < 0 || nv > 99 {
+        let nv = (self.rotation as i16) + value;
+        if nv == 0 || nv == 100 {
             self.zero_crossings += 1;
-            nv = nv % 100;
         }
-        self.rotation = nv as u16;
+        self.rotation = (nv % 100) as u16;
     }
 
     pub fn crossing_count(&self) -> u16 {
