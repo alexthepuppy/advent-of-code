@@ -18,17 +18,17 @@ impl DialRotation {
 
     // The actual rotation logic
     pub fn rotate(&mut self, value: i16) {
-        println!("[[RT]]");
-        println!("[DBG::INTL_V] {}", self.rotation);
-        println!("[DBG::VALUE] {}", value);
+        println!("[[ROTATION_CALL]]-----------------------------------------------------------");
+        println!("\t[DBG::INTL_ROTATION] \t\t\t\t{}", self.rotation);
+        println!("\t[DBG::ROTATION_DELTA] \t\t\t\t{}", value);
         let nv = {
             if value < 0 {
                 // Rotate left
                 let abs_rot = value.abs(); // MUST be between 0-99
-                println!("[DBG::ROT_ABS] {}", abs_rot);
 
                 // Apply the transformation
                 let mut rv = (self.rotation as i16) - abs_rot;
+                println!("\t[DBG::ROTATION_TRANSFORMED_PS] \t\t\t{}", rv);
 
                 // If less than zero after transforming snap around
                 if rv < 0 {
@@ -39,10 +39,11 @@ impl DialRotation {
             } else {
                 // Rotate right
                 let abs_rot = value.abs(); // MUST be between 0-99
-                println!("[DBG::ROT_ABS] {}", abs_rot);
+                println!("\t[DBG::ROT_ABS] \t\t\t\t\t{}", abs_rot);
 
                 // Apply the transformation
                 let mut rv = ((self.rotation as i16) + abs_rot).abs();
+                println!("\t[DBG::ROTATION_TRANSFORMED_PS] \t\t\t{}", rv);
 
                 // If less than zero after transforming snap around
                 if rv > 99 {
@@ -52,12 +53,12 @@ impl DialRotation {
                 (rv % 100) as u16
             }
         };
-        println!("[DBG::NEW_V] {}", nv); // Print out the dial value for debugging
+        println!("\t[DBG::NEW_ROTATION] \t\t\t\t{}", nv); // Print out the dial value for debugging
 
         if nv == 0 { // ONLY IF LANDING AT ZERO, increment the crossing count
             self.zero_crossings += 1;
         }
-        println!("[DBG::ZC] {}", self.zero_crossings);
+        println!("\t[DBG::ZERO_CROSSING_COUNT] \t\t\t{}", self.zero_crossings);
 
         // Update our rotation
         self.rotation = nv;
@@ -66,7 +67,9 @@ impl DialRotation {
 
 pub fn solve() -> usize {
     let lines = get_lines();
-    let mut dial: DialRotation = DialRotation::new(0, 0);
+    
+    // (FIX??): If the... it says the dial starts at 50. I ignored that and put 0. I am so dumb.
+    let mut dial: DialRotation = DialRotation::new(50, 0);
 
     for line in lines {
         let direction_sym = line.get(..1).unwrap();
