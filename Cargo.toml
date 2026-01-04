@@ -1,6 +1,10 @@
 [package]
 name = "advent-of-code"
-version = "0.1.0"
+version = "2025.1.0"
 edition = "2024"
+
+[[bin]]
+name = "y25-d1-1"
+path = "./src/Y25/day1.rs"
 
 [dependencies]
