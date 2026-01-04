@@ -7,30 +7,52 @@ fn get_lines() -> Vec<&'static str> {
 // A Struct to represent the dial and its rotation, and encapuslate its logic
 struct DialRotation {
     rotation: u16,              // The position of the dial; should be constrained to 0-99 inclusivly.
-    pub zero_crossings: u16     // The number of times the dial LANDS ON ZERO at the end of the spinning operation.
+    pub zero_crossings: usize   // The number of times the dial LANDS ON ZERO at the end of the spinning operation.
 }
 
 impl DialRotation {
     // Basic ahh constructor because habit
-    pub fn new(rotation: u16, zero_crossings: u16) -> Self {
+    pub fn new(rotation: u16, zero_crossings: usize) -> Self {
         Self { rotation, zero_crossings }
     }
 
     // The actual rotation logic
     pub fn rotate(&mut self, value: i16) {
         println!("[[RT]]");
+        println!("[DBG::INTL_V] {}", self.rotation);
+        println!("[DBG::VALUE] {}", value);
         let nv = {
-            let tv1 = ((self.rotation as i16) + value) % 100; // Convert the current value (uint 0-99) to signed so we can do math with `value` (-99 to 99)
-            if tv1 < 0 {
-                // (THE FIX?): I had forgotten to abs the value before rotating
-                // If below zero, subtract 100 to wrap it around (values are constrained to two chars so we shouldn't need to worry about wrapping around twice)
-                (100 - tv1.abs()) as u16
+            if value < 0 {
+                // Rotate left
+                let abs_rot = value.abs(); // MUST be between 0-99
+                println!("[DBG::ROT_ABS] {}", abs_rot);
+
+                // Apply the transformation
+                let mut rv = (self.rotation as i16) - abs_rot;
+
+                // If less than zero after transforming snap around
+                if rv < 0 {
+                    rv = 100 - rv.abs();
+                } 
+
+                (rv % 100) as u16
             } else {
-                // It's above zero so just return it
-                tv1 as u16
+                // Rotate right
+                let abs_rot = value.abs(); // MUST be between 0-99
+                println!("[DBG::ROT_ABS] {}", abs_rot);
+
+                // Apply the transformation
+                let mut rv = ((self.rotation as i16) + abs_rot).abs();
+
+                // If less than zero after transforming snap around
+                if rv > 99 {
+                    rv = rv - 99;
+                } 
+
+                (rv % 100) as u16
             }
         };
-        println!("[DBG::NV] {}", nv); // Print out the dial value for debugging
+        println!("[DBG::NEW_V] {}", nv); // Print out the dial value for debugging
 
         if nv == 0 { // ONLY IF LANDING AT ZERO, increment the crossing count
             self.zero_crossings += 1;
@@ -42,7 +64,7 @@ impl DialRotation {
     }
 }
 
-pub fn solve() -> u16 {
+pub fn solve() -> usize {
     let lines = get_lines();
     let mut dial: DialRotation = DialRotation::new(0, 0);
 
