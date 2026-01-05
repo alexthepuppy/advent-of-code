@@ -3,6 +3,10 @@ name = "advent-of-code"
 version = "2025.1.0"
 edition = "2024"
 
+[lib]
+name = "common"
+path = "./src/common/lib.rs"
+
 [[bin]]
 name = "y25-d1-1"
 path = "./src/Y25/day1.rs"
