@@ -1,5 +1,15 @@
 static INPUT_FILE: &str = include_str!("../../datafiles/Y25/day01-1.txt");
 
+struct NobOperation {
+    delta: usize,
+    direction: Direction
+}
+
+enum Direction {
+    Clockwise,
+    Counterclockwise
+}
+
 // A Struct to represent the dial and its rotation, and encapuslate its logic
 struct DialRotation {
     rotation: usize,              // The position of the dial; should be constrained to 0-99 inclusivly.
@@ -36,31 +46,30 @@ impl DialRotation {
     }
 
     // A helper to rotate multiple times
-    pub fn rotate(&mut self, delta: isize) {
-        let shift_left = delta < 0; // If the delta is LESS THAN zero, we're making a counterclockwise/left rotation
-        let target = delta.abs() as usize; // Set our counter target to the absolute of the target
-        for _i in 0..target {
-            if shift_left {
-                self.rotate_left();
-            } else {
-                self.rotate_right();
+    pub fn turn_nob(&mut self, ops: NobOperation) {
+        for _i in 0..ops.delta {
+            match ops.direction {
+                Direction::Clockwise => self.rotate_right(),
+                Direction::Counterclockwise => self.rotate_left(),
             }
+            println!("[Dial] {}", self.rotation)
         }
     }
 }
 
-fn parse_line(line: &str) -> isize {
+fn parse_line(line: &str) -> NobOperation {
     let direction_sym = line.get(..1).unwrap();
     let direction_val_str = line.get(1..).unwrap();
     let direction_val: usize = direction_val_str.parse().expect("Unable to parse rotation");
 
-    let mut modified_direction: isize = direction_val as isize;
+    println!("({}){}", direction_sym, direction_val);
     
-    match direction_sym {
-        "L" => modified_direction *= -1,
-        _ => {}
-    }
-    modified_direction
+    let direction = match direction_sym {
+        "L" => Direction::Counterclockwise,
+        _ => Direction::Clockwise
+    };
+
+    NobOperation { delta: direction_val, direction }
 }
 
 pub fn solve(inital_rotation: usize, instructions: Vec<&str>) -> usize {
@@ -68,7 +77,7 @@ pub fn solve(inital_rotation: usize, instructions: Vec<&str>) -> usize {
 
     for line in instructions {
         let delta = parse_line(line);
-        dial.rotate(delta);
+        dial.turn_nob(delta);
     }
 
     dial.zero_crossings
