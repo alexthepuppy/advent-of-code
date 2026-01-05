@@ -1,95 +1,81 @@
 static INPUT_FILE: &str = include_str!("../../datafiles/Y25/day01-1.txt");
 
-fn get_lines() -> Vec<&'static str> {
-    INPUT_FILE.lines().collect()
-}
-
 // A Struct to represent the dial and its rotation, and encapuslate its logic
 struct DialRotation {
-    rotation: u16,              // The position of the dial; should be constrained to 0-99 inclusivly.
+    rotation: usize,              // The position of the dial; should be constrained to 0-99 inclusivly.
     pub zero_crossings: usize   // The number of times the dial LANDS ON ZERO at the end of the spinning operation.
 }
 
 impl DialRotation {
     // Basic ahh constructor because habit
-    pub fn new(rotation: u16, zero_crossings: usize) -> Self {
-        Self { rotation, zero_crossings }
+    pub fn new(rotation: usize) -> Self {
+        Self { rotation, zero_crossings: 0 }
     }
 
-    // The actual rotation logic
-    pub fn rotate(&mut self, value: i16) {
-        println!("[[ROTATION_CALL]]-----------------------------------------------------------");
-        println!("\t[DBG::INTL_ROTATION] \t\t\t\t{}", self.rotation);
-        println!("\t[DBG::ROTATION_DELTA] \t\t\t\t{}", value);
-        let nv = {
-            if value < 0 {
-                // Rotate left
-                let abs_rot = value.abs(); // MUST be between 0-99
-
-                // Apply the transformation
-                let mut rv = (self.rotation as i16) - abs_rot;
-                println!("\t[DBG::ROTATION_TRANSFORMED_PS] \t\t\t{}", rv);
-
-                // If less than zero after transforming snap around
-                if rv < 0 {
-                    rv = 100 - rv.abs();
-                } 
-
-                (rv % 100) as u16
-            } else {
-                // Rotate right
-                let abs_rot = value.abs(); // MUST be between 0-99
-                println!("\t[DBG::ROT_ABS] \t\t\t\t\t{}", abs_rot);
-
-                // Apply the transformation
-                let mut rv = ((self.rotation as i16) + abs_rot).abs();
-                println!("\t[DBG::ROTATION_TRANSFORMED_PS] \t\t\t{}", rv);
-
-                // If less than zero after transforming snap around
-                if rv > 99 {
-                    rv = rv - 99;
-                } 
-
-                (rv % 100) as u16
-            }
-        };
-        println!("\t[DBG::NEW_ROTATION] \t\t\t\t{}", nv); // Print out the dial value for debugging
-
-        if nv == 0 { // ONLY IF LANDING AT ZERO, increment the crossing count
+    // Check if we're at zero and increment the counter
+    fn zero_check(&mut self) {
+        if self.rotation == 0 {
             self.zero_crossings += 1;
         }
-        println!("\t[DBG::ZERO_CROSSING_COUNT] \t\t\t{}", self.zero_crossings);
+    }
 
-        // Update our rotation
-        self.rotation = nv;
+    pub fn rotate_left(&mut self) {
+        self.rotation = {
+            if self.rotation == 0 { 99 } // If we're at 0, going one left means going to 99
+            else { self.rotation - 1 } // If we're not at 0, we just subtract one to go left
+        };
+        self.zero_check(); // Check if we're at zero
+    }
+
+    pub fn rotate_right(&mut self) {
+        self.rotation = {
+            if self.rotation == 99 { 0 } // If we're at 99, going one right would reset us to 0
+            else { self.rotation + 1 }  // If we're not at 99, we just add one to go right
+        };
+        self.zero_check(); // Check if we're at zero
+    }
+
+    // A helper to rotate multiple times
+    pub fn rotate(&mut self, delta: isize) {
+        let shift_left = delta < 0; // If the delta is LESS THAN zero, we're making a counterclockwise/left rotation
+        let target = delta.abs() as usize; // Set our counter target to the absolute of the target
+        for _i in 0..target {
+            if shift_left {
+                self.rotate_left();
+            } else {
+                self.rotate_right();
+            }
+        }
     }
 }
 
-pub fn solve() -> usize {
-    let lines = get_lines();
+fn parse_line(line: &str) -> isize {
+    let direction_sym = line.get(..1).unwrap();
+    let direction_val_str = line.get(1..).unwrap();
+    let direction_val: usize = direction_val_str.parse().expect("Unable to parse rotation");
+
+    let mut modified_direction: isize = direction_val as isize;
     
-    // (FIX??): If the... it says the dial starts at 50. I ignored that and put 0. I am so dumb.
-    let mut dial: DialRotation = DialRotation::new(50, 0);
+    match direction_sym {
+        "L" => modified_direction *= -1,
+        _ => {}
+    }
+    modified_direction
+}
 
-    for line in lines {
-        let direction_sym = line.get(..1).unwrap();
-        let direction_val_str = line.get(1..).unwrap();
-        let direction_val: u16 = direction_val_str.parse().expect("Unable to parse rotation");
+pub fn solve(inital_rotation: usize, instructions: Vec<&str>) -> usize {
+    let mut dial: DialRotation = DialRotation::new(inital_rotation);
 
-        let mut mdv: i16 = direction_val as i16;
-        
-        match direction_sym {
-            "L" => mdv *= -1,
-            _ => {}
-        }
-
-        dial.rotate(mdv);
+    for line in instructions {
+        let delta = parse_line(line);
+        dial.rotate(delta);
     }
 
     dial.zero_crossings
 }
 
 pub fn main() {
-    let result = solve();
+    let lines = INPUT_FILE.lines().collect();
+    let result = solve(50, lines);
     println!("Zero crossings: {}", result)
 }
