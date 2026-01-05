@@ -8,7 +8,11 @@ name = "common"
 path = "./src/common/lib.rs"
 
 [[bin]]
-name = "y25-d1-1"
-path = "./src/Y25/day1.rs"
+name = "y25_d1-1"
+path = "./src/Y25/day1/part1.rs"
+
+[[bin]]
+name = "y25_d1-2"
+path = "./src/Y25/day1/part2.rs"
 
 [dependencies]
